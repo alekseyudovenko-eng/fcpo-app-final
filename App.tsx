@@ -28,7 +28,7 @@ const App: React.FC = () => {
   const [comparisonData, setComparisonData] = useState<PriceData[] | null>(null);
   const [isComparisonLoading, setIsComparisonLoading] = useState<boolean>(false);
 
-  const fetchData = useCallback(async (timeframe: Timeframe) => {
+  const fetchData = useCallback(async (timeframe) => { // здесь весь ваш старый код, который был внутри функции }, []);
     setIsLoading(true);
     setError(null);
     try {
@@ -62,7 +62,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     fetchData(activeTimeframe);
-  }, [activeTimeframe, fetchData]);
+  }, [activeTimeframe]);
 
   useEffect(() => {
     if (comparisonOption === 'NONE' || priceData.length === 0) {
