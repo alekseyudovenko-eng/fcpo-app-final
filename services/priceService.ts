@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/generative-ai";
 import type { PriceData, Timeframe, ComparisonOption, GroundingSource } from '../types';
 
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
