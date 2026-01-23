@@ -35,16 +35,20 @@ export const fetchRealtimePriceData = async (timeframe: Timeframe): Promise<{ da
     });
 
     const result = await model.generateContent(`Get FCPO futures prices for ${timeframe}`);
-    const text = result.response.text();
+    const response = await result.response;
+    const text = response.text();
     const parsed = JSON.parse(text || '{"prices": []}');
     
-    return { data: parsed.prices || [], sources: [] };
+    return { 
+      data: parsed.prices || [], 
+      sources: [] 
+    };
   } catch (error) {
-    console.error(error);
+    console.error("Fetch error:", error);
     return { data: [], sources: [] };
   }
 };
 
-export const fetchComparisonData = async (t: Timeframe, c: ComparisonOption, r: PriceData[]): Promise<PriceData[]> => {
+export const fetchComparisonData = async (timeframe: Timeframe, comparison: ComparisonOption, referenceData: PriceData[]): Promise<PriceData[]> => {
   return [];
 };
