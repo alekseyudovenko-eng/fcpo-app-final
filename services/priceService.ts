@@ -1,3 +1,8 @@
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+
+// Проверяем наличие ключа ПЕРЕД созданием объекта, чтобы не было ошибки в консоли
+export const genAI = API_KEY ? new GoogleGenAI(API_KEY) : null;
+
 import { GoogleGenAI, SchemaType } from "@google/generative-ai";
 import type { PriceData, Timeframe, ComparisonOption, GroundingSource } from '../types';
 
