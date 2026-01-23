@@ -1,11 +1,17 @@
-import { GoogleGenAI, SchemaType } from "@google/generative-ai";
-import type { PriceData, Timeframe, ComparisonOption, GroundingSource } from '../types';
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import type { PriceData, Timeframe, ComparisonOption, GroundingSource } from './types';
 
+// Используем ключ из Vercel
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
-const genAI = API_KEY ? new GoogleGenAI(API_KEY) : null;
+
+// Исправлено название класса на GoogleGenerativeAI
+const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 export const fetchRealtimePriceData = async (timeframe: Timeframe): Promise<{ data: PriceData[], sources: GroundingSource[] }> => {
-  if (!genAI) return { data: [], sources: [] };
+  if (!genAI) {
+    console.error("API Key is missing or genAI not initialized");
+    return { data: [], sources: [] };
+  }
 
   try {
     const model = genAI.getGenerativeModel({ 
