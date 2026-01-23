@@ -1,73 +1,42 @@
-
-import { GoogleGenAI } from "@google/generative-ai";
+import { GoogleGenAI, SchemaType } from "@google/generative-ai";
 import type { PriceData, Timeframe, ComparisonOption, GroundingSource } from '../types';
 
-//const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
-//const genAI = new GoogleGenAI(API_KEY);
+// Безопасное получение ключа
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
+const genAI = API_KEY ? new GoogleGenAI(API_KEY) : null;
 
-// Вместо вызова ИИ, временно возвращаем просто пустые данные или число
+// Исправленная функция-заглушка (теперь она закрыта правильно)
 export const getPriceData = async () => {
-   return { price: 100 }; // Просто заглушка
+    return { price: 100 }; 
+};
 
 export const fetchRealtimePriceData = async (timeframe: Timeframe): Promise<{ data: PriceData[], sources: GroundingSource[] }> => {
-  const prompt = `Fetch the most recent OHLC (Open, High, Low, Close) futures price data for Crude Palm Oil (FCPO) on Bursa Malaysia for the timeframe: ${timeframe}. 
-  Provide the data as a JSON array of objects with fields: date (ISO string or YYYY-MM-DD), open, high, low, close. 
-  If historical data for the full timeframe isn't available, provide as many recent data points as possible (up to 30).
-  Ensure the prices are in MYR.`;
+  const prompt = `Fetch the most recent OHLC futures price data for Crude Palm Oil (FCPO) for: ${timeframe}. Provide JSON with prices array.`;
+
+  // Если ИИ не инициализирован, возвращаем пустые данные, а не ломаем сайт
+  if (!genAI) {
+    console.error("AI Key is missing!");
+    return { data: [], sources: [] };
+  }
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            prices: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  date: { type: Type.STRING },
-                  open: { type: Type.NUMBER },
-                  high: { type: Type.NUMBER },
-                  low: { type: Type.NUMBER },
-                  close: { type: Type.NUMBER },
-                },
-                required: ["date", "open", "high", "low", "close"],
-              },
-            },
-          },
-        },
-      },
+    const model = genAI.getGenerativeModel({ 
+        model: "gemini-1.5-flash",
+        generationConfig: { responseMimeType: "application/json" }
     });
 
-    const text = response.text;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
     const parsed = JSON.parse(text || '{"prices": []}');
     
-    // Extract grounding sources
-    const sources: GroundingSource[] = [];
-    const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
-    if (chunks) {
-      chunks.forEach((chunk: any) => {
-        if (chunk.web) {
-          sources.push({
-            title: chunk.web.title || 'Market Source',
-            uri: chunk.web.uri
-          });
-        }
-      });
-    }
-
     return { 
-      data: parsed.prices.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-      sources 
+      data: parsed.prices || [], 
+      sources: [] 
     };
   } catch (error) {
     console.error("Error fetching real-time data:", error);
-    throw error;
+    return { data: [], sources: [] };
   }
 };
 
@@ -76,41 +45,5 @@ export const fetchComparisonData = async (
   comparison: ComparisonOption,
   referenceData: PriceData[]
 ): Promise<PriceData[]> => {
-  if (comparison === 'NONE') return [];
-  
-  const target = comparison === 'SBO' ? 'Soybean Oil (SBO) Futures' : 'Previous Period FCPO';
-  const prompt = `For comparison with FCPO, fetch the close prices for ${target} corresponding to these dates: ${referenceData.map(d => d.date).join(', ')}.
-  Return a JSON array of objects with fields: date, close. Ensure the data is aligned with the provided dates.`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: {
-        tools: [{ googleSearch: {} }],
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            comparisonData: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  date: { type: Type.STRING },
-                  close: { type: Type.NUMBER },
-                }
-              }
-            }
-          }
-        }
-      }
-    });
-
-    const parsed = JSON.parse(response.text || '{"comparisonData": []}');
-    return parsed.comparisonData;
-  } catch (error) {
-    console.error("Error fetching comparison data:", error);
-    return [];
-  }
+  return []; // Временно возвращаем пустоту для стабильности
 };
