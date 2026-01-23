@@ -23,7 +23,7 @@ const fetchData = useCallback(async (timeframe: Timeframe) => {
         setError('No recent price data found for the selected timeframe.');
       }
     } catch (err) {
-      setError('Failed to fetch real-time price data. Searching market updates...');
+      setError('Failed to fetch real-time price data.');
       console.error(err);
     } finally {
       setIsLoading(false);
