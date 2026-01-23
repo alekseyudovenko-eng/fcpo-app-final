@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PriceData, Timeframe, ComparisonOption, GroundingSource } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GOOGLE_API_KEY });
+const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY;
+const genAI = new GoogleGenAI(API_KEY);
 
 export const fetchRealtimePriceData = async (timeframe: Timeframe): Promise<{ data: PriceData[], sources: GroundingSource[] }> => {
   const prompt = `Fetch the most recent OHLC (Open, High, Low, Close) futures price data for Crude Palm Oil (FCPO) on Bursa Malaysia for the timeframe: ${timeframe}. 
