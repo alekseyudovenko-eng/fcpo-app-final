@@ -1,19 +1,20 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import type { PriceData, Timeframe, ComparisonOption, GroundingSource } from './types';
 
-// Используем ключ из настроек Vercel
+// Ключ берется из Environment Variables в Vercel
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
 
-// Исправленное название класса
+// Инициализация клиента Google AI
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 export const fetchRealtimePriceData = async (timeframe: Timeframe): Promise<{ data: PriceData[], sources: GroundingSource[] }> => {
   if (!genAI) {
-    console.error("Критическая ошибка: API ключ не найден в переменных окружения!");
+    console.error("API Key is missing! Проверьте настройки Vercel.");
     return { data: [], sources: [] };
   }
 
   try {
+    // ВАЖНО: Добавляем { apiVersion: "v1beta" }, чтобы избежать ошибки 404
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       generationConfig: {
@@ -38,9 +39,8 @@ export const fetchRealtimePriceData = async (timeframe: Timeframe): Promise<{ da
           },
         },
       },
-    });
+    }, { apiVersion: "v1beta" }); // <--- Вот этот фикс уберет 404
 
-    // Улучшенный промпт: требуем минимум 30 точек данных для отрисовки красивого графика
     const prompt = `Generate a realistic historical price dataset for FCPO (Crude Palm Oil) futures for the ${timeframe} period. 
     Provide exactly 30 data points. 
     Prices should be realistic (between 3800 and 4200 RM). 
@@ -50,23 +50,22 @@ export const fetchRealtimePriceData = async (timeframe: Timeframe): Promise<{ da
     const response = await result.response;
     const text = response.text();
     
-    // Безопасный парсинг JSON
+    // Парсим результат
     const parsed = JSON.parse(text || '{"prices": []}');
     const priceData = parsed.prices || [];
 
-    console.log(`Успешно загружено ${priceData.length} точек данных.`);
+    console.log("Данные успешно получены:", priceData);
 
     return { 
       data: priceData, 
       sources: [] 
     };
   } catch (error) {
-    console.error("Ошибка при получении данных от Gemini:", error);
+    console.error("Fetch error:", error);
     return { data: [], sources: [] };
   }
 };
 
 export const fetchComparisonData = async (timeframe: Timeframe, comparison: ComparisonOption, referenceData: PriceData[]): Promise<PriceData[]> => {
-  // Заглушка для сравнения
   return [];
 };
